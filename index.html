@@ -477,238 +477,241 @@
   </div>
 </section>
 
-<!-- DASHBOARD SECTION -->
+<!-- DASHBOARD SECTION - Dynamic from Google Sheets -->
 <section id="dashboard-section" style="background:#f0f4fb; border-top:1px solid #dde4f0;">
   <div class="container">
     <div class="section-head">
       <div class="section-icon"><i class="fas fa-chart-bar"></i></div>
       <div>
         <h2>داشبورد متابعة تسليم المقررات</h2>
-        <p>نسب التقديم ومتابعة أعضاء هيئة التدريس — الفصل الدراسي الأول 2024/2025</p>
+        <p>البيانات مباشرة من نماذج الرفع — تتحدث تلقائياً</p>
       </div>
     </div>
 
-    <!-- Metrics -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem;" id="db-metrics"></div>
-
-    <!-- Charts -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem;">
-      <div style="background:#fff;border-radius:16px;border:1.5px solid #dde4f0;padding:1.25rem;">
-        <div style="font-size:14px;font-weight:700;color:#0d1b4b;margin-bottom:12px;">نسبة الإنجاز حسب الفرقة</div>
-        <div style="position:relative;height:190px;"><canvas id="gradeChart" role="img" aria-label="نسبة الإنجاز حسب الفرقة الدراسية"></canvas></div>
-      </div>
-      <div style="background:#fff;border-radius:16px;border:1.5px solid #dde4f0;padding:1.25rem;">
-        <div style="font-size:14px;font-weight:700;color:#0d1b4b;margin-bottom:12px;">توصيف مقابل تقرير</div>
-        <div style="position:relative;height:190px;"><canvas id="typeChart" role="img" aria-label="مقارنة تقديم التوصيف والتقرير"></canvas></div>
-      </div>
+    <div id="db-loading" style="text-align:center;padding:3rem;color:#607d9e;">
+      <i class="fas fa-spinner fa-spin" style="font-size:2rem;margin-bottom:1rem;display:block;color:#1565c0;"></i>
+      جاري تحميل البيانات من Google Sheets...
     </div>
 
-    <!-- Filters -->
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-      <select id="db-grade" onchange="dbRender()" style="font-family:'Cairo',sans-serif;font-size:13px;padding:7px 12px;border-radius:10px;border:1.5px solid #dde4f0;background:#fff;color:#2c3e6b;cursor:pointer;">
-        <option value="">كل الفرق</option>
-        <option>الفرقة الأولى</option><option>الفرقة الثانية</option>
-        <option>الفرقة الثالثة</option><option>الفرقة الرابعة</option>
-      </select>
-      <select id="db-sem" onchange="dbRender()" style="font-family:'Cairo',sans-serif;font-size:13px;padding:7px 12px;border-radius:10px;border:1.5px solid #dde4f0;background:#fff;color:#2c3e6b;cursor:pointer;">
-        <option value="">كل الفصول</option>
-        <option>الفصل الأول</option><option>الفصل الثاني</option>
-      </select>
-      <select id="db-lang" onchange="dbRender()" style="font-family:'Cairo',sans-serif;font-size:13px;padding:7px 12px;border-radius:10px;border:1.5px solid #dde4f0;background:#fff;color:#2c3e6b;cursor:pointer;">
-        <option value="">عربي وإنجليزي</option>
-        <option>عربي</option><option>إنجليزي</option>
-      </select>
-      <select id="db-status" onchange="dbRender()" style="font-family:'Cairo',sans-serif;font-size:13px;padding:7px 12px;border-radius:10px;border:1.5px solid #dde4f0;background:#fff;color:#2c3e6b;cursor:pointer;">
-        <option value="">كل الحالات</option>
-        <option value="done">مكتمل</option>
-        <option value="partial">جزئي</option>
-        <option value="pending">لم يُقدم</option>
-      </select>
+    <div id="db-error" style="display:none;text-align:center;padding:2rem;">
+      <i class="fas fa-exclamation-circle" style="font-size:2rem;color:#b71c1c;margin-bottom:1rem;display:block;"></i>
+      <p style="color:#b71c1c;font-weight:700;">تعذر تحميل البيانات</p>
+      <p style="color:#607d9e;font-size:13px;margin-top:8px;">تأكد من إعدادات المشاركة على Google Sheets</p>
+      <button onclick="dbLoad()" style="margin-top:1rem;font-family:'Cairo',sans-serif;font-size:13px;padding:8px 20px;border-radius:10px;border:none;background:#1565c0;color:#fff;cursor:pointer;font-weight:700;">
+        <i class="fas fa-redo"></i> إعادة المحاولة
+      </button>
     </div>
 
-    <!-- Table -->
-    <div style="background:#fff;border-radius:16px;border:1.5px solid #dde4f0;overflow:hidden;">
-      <table style="width:100%;border-collapse:collapse;font-size:13px;font-family:'Cairo',sans-serif;table-layout:fixed;">
-        <thead>
-          <tr style="background:#f8faff;">
-            <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:24%;">اسم الدكتور</th>
-            <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:20%;">المادة</th>
-            <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:12%;">الفرقة</th>
-            <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:11%;">الفصل</th>
-            <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:9%;">اللغة</th>
-            <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:10%;">توصيف</th>
-            <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:10%;">تقرير</th>
-            <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:10%;">الحالة</th>
-          </tr>
-        </thead>
-        <tbody id="db-tbody"></tbody>
-      </table>
+    <div id="db-content" style="display:none;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem;" id="db-metrics"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem;">
+        <div style="background:#fff;border-radius:16px;border:1.5px solid #dde4f0;padding:1.25rem;">
+          <div style="font-size:14px;font-weight:700;color:#0d1b4b;margin-bottom:12px;">نسبة الإنجاز حسب الفرقة</div>
+          <div style="position:relative;height:190px;"><canvas id="gradeChart" role="img" aria-label="نسبة الإنجاز حسب الفرقة"></canvas></div>
+        </div>
+        <div style="background:#fff;border-radius:16px;border:1.5px solid #dde4f0;padding:1.25rem;">
+          <div style="font-size:14px;font-weight:700;color:#0d1b4b;margin-bottom:12px;">توصيف مقابل تقرير</div>
+          <div style="position:relative;height:190px;"><canvas id="typeChart" role="img" aria-label="مقارنة التوصيف والتقرير"></canvas></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <select id="db-grade" onchange="dbFilter()" style="font-family:'Cairo',sans-serif;font-size:13px;padding:7px 12px;border-radius:10px;border:1.5px solid #dde4f0;background:#fff;color:#2c3e6b;cursor:pointer;">
+          <option value="">كل الفرق</option>
+          <option>الفرقة الأولى</option><option>الفرقة الثانية</option>
+          <option>الفرقة الثالثة</option><option>الفرقة الرابعة</option>
+        </select>
+        <select id="db-sem" onchange="dbFilter()" style="font-family:'Cairo',sans-serif;font-size:13px;padding:7px 12px;border-radius:10px;border:1.5px solid #dde4f0;background:#fff;color:#2c3e6b;cursor:pointer;">
+          <option value="">كل الفصول</option>
+          <option>الفصل الدراسي الأول</option><option>الفصل الدراسي الثاني</option>
+        </select>
+        <select id="db-lang" onchange="dbFilter()" style="font-family:'Cairo',sans-serif;font-size:13px;padding:7px 12px;border-radius:10px;border:1.5px solid #dde4f0;background:#fff;color:#2c3e6b;cursor:pointer;">
+          <option value="">عربي وإنجليزي</option>
+          <option>عربي</option><option>إنجليزي</option>
+        </select>
+        <button onclick="dbLoad()" style="font-family:'Cairo',sans-serif;font-size:13px;padding:7px 16px;border-radius:10px;border:none;background:#1565c0;color:#fff;cursor:pointer;font-weight:700;">
+          <i class="fas fa-sync-alt"></i> تحديث
+        </button>
+        <span id="db-lastupdate" style="font-size:12px;color:#9e9e9e;margin-right:auto;"></span>
+      </div>
+
+      <div style="background:#fff;border-radius:16px;border:1.5px solid #dde4f0;overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;font-family:'Cairo',sans-serif;table-layout:fixed;">
+          <thead>
+            <tr style="background:#f8faff;">
+              <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:26%;">اسم عضو هيئة التدريس</th>
+              <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:20%;">المقرر</th>
+              <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:13%;">الفرقة</th>
+              <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:14%;">الفصل</th>
+              <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:10%;">اللغة</th>
+              <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:10%;">توصيف</th>
+              <th style="padding:11px 14px;text-align:right;font-weight:700;font-size:12px;color:#607d9e;border-bottom:1.5px solid #dde4f0;width:10%;">تقرير</th>
+            </tr>
+          </thead>
+          <tbody id="db-tbody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </section>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-const dbData = [
-  {dr:"أ.م.د/ عصام البدري",sub:"مباديء الاقتصاد",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"د/ علي محمد",sub:"موارد اقتصادية",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"د/ احمد رمزي",sub:"رياضيات الاعمال",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"إنجليزي",des:true,rep:true},
-  {dr:"د/ محمد عبد الله",sub:"مباديء المحاسبة المالية",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"أ.د/ علي عبد القادر",sub:"مباديء الادارة",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"د/ ابراهيم منشاوي",sub:"اخلاقيات مهنة المحاسبة",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"د/ وليد حمدان",sub:"السلوك التنظيمي",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"د/ احمد قمرة",sub:"مباديء الاقتصاد الجزئي",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"د/ ابراهيم منشاوي",sub:"اخلاقيات مهنة المحاسبة",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"عربي",des:false,rep:false},
-  {dr:"أ.م.د/ سهام نبيل",sub:"السلوك التنظيمي",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"عربي",des:false,rep:false},
-  {dr:"أ.م.د/ احمد عيد",sub:"موارد اقتصادية",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"عربي",des:false,rep:false},
-  {dr:"أ.د/ يوسف عبد القادر",sub:"مباديء المحاسبة المالية",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"عربي",des:false,rep:false},
-  {dr:"أ.م.د/ نها عبد اللطيف",sub:"رياضيات الاعمال",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"أ.د/ محمد ابو القمصان",sub:"مباديء الادارة",grade:"الفرقة الأولى",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"أ. د/ عبد العزيز مرزوق",sub:"إدارة الموارد البشرية",grade:"الفرقة الأولى",sem:"الفصل الثاني",lang:"عربي",des:true,rep:false},
-  {dr:"أ. د/ شوقي فودة",sub:"محاسبة تكاليف",grade:"الفرقة الأولى",sem:"الفصل الثاني",lang:"عربي",des:true,rep:false},
-  {dr:"د / علي ابو السعود",sub:"مبادىء الخطر والتأمين",grade:"الفرقة الأولى",sem:"الفصل الثاني",lang:"عربي",des:false,rep:false},
-  {dr:"أ.م.د / عصام مندور",sub:"مبادىء الاقتصاد الكلي",grade:"الفرقة الأولى",sem:"الفصل الثاني",lang:"عربي",des:false,rep:false},
-  {dr:"أ.د / يوسف عبد القادر",sub:"مبادىء محاسبة",grade:"الفرقة الأولى",sem:"الفصل الثاني",lang:"عربي",des:false,rep:false},
-  {dr:"أ .د / رضا صالح",sub:"محاسبة مالية",grade:"الفرقة الأولى",sem:"الفصل الثاني",lang:"إنجليزي",des:false,rep:false},
-  {dr:"د / سماح عادل",sub:"أدارة الموارد البشرية",grade:"الفرقة الأولى",sem:"الفصل الثاني",lang:"إنجليزي",des:false,rep:false},
-  {dr:"أ.د/ رضا صالح",sub:"مباديء المحاسبة الادارية",grade:"الفرقة الثانية",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"أ.د / وليد عفيفي",sub:"مباديء الاحصاء",grade:"الفرقة الثانية",sem:"الفصل الأول",lang:"إنجليزي",des:true,rep:true},
-  {dr:"أ.د/ علي مجاهد",sub:"محاسبة شركات الاشخاص",grade:"الفرقة الثانية",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"أ.د/ علي عبد القادر",sub:"ادارة تسويق",grade:"الفرقة الثانية",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"أ.م.د/ ابراهيم الطحان",sub:"دراسات محاسبية بلغة",grade:"الفرقة الثانية",sem:"الفصل الأول",lang:"إنجليزي",des:true,rep:false},
-  {dr:"أ.م.د/ عصام البدري",sub:"اقتصاد نقود و بنوك",grade:"الفرقة الثانية",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"أ.د / شيرين ابو وردة",sub:"ادارة تسويق",grade:"الفرقة الثانية",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"أ.د/ علي مجاهد",sub:"دراسات محاسبية بلغة",grade:"الفرقة الثانية",sem:"الفصل الأول",lang:"عربي",des:false,rep:false},
-  {dr:"أ. د/ عبد العزيز مرزوق",sub:"الموارد البشرية",grade:"الفرقة الثانية",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"أ.م.د/ ابراهيم زكريا",sub:"محاسبة شركات الاشخاص",grade:"الفرقة الثانية",sem:"الفصل الأول",lang:"عربي",des:false,rep:false},
-  {dr:"أ.د / وليد عفيفي",sub:"مباديء الاحصاء",grade:"الفرقة الثانية",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"أ. د/ شوقي فودة",sub:"مباديء المحاسبة الادارية",grade:"الفرقة الثانية",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"أ.م.د/ عصام مندور",sub:"اقتصاد نقود و بنوك",grade:"الفرقة الثانية",sem:"الفصل الأول",lang:"عربي",des:false,rep:false},
-  {dr:"أ.د / شيرين ابو وردة",sub:"أدارة الانتاج",grade:"الفرقة الثانية",sem:"الفصل الثاني",lang:"عربي",des:true,rep:true},
-  {dr:"أ.م.د / احمد قمرة",sub:"مالية عامة",grade:"الفرقة الثانية",sem:"الفصل الثاني",lang:"عربي",des:true,rep:true},
-  {dr:"د/ هالة العجمي",sub:"محاسبة شركات الأموال",grade:"الفرقة الثانية",sem:"الفصل الثاني",lang:"عربي",des:false,rep:false},
-  {dr:"أ.د / علي مجاهد",sub:"تطبيقات محاسبية وادارية",grade:"الفرقة الثانية",sem:"الفصل الثاني",lang:"إنجليزي",des:true,rep:true},
-  {dr:"أ.د / علي عبد القادر",sub:"ادارة انتاج",grade:"الفرقة الثانية",sem:"الفصل الثاني",lang:"إنجليزي",des:false,rep:false},
-  {dr:"أ.د / وليد عفيفي",sub:"احصاء تطبيقي",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"إنجليزي",des:true,rep:true},
-  {dr:"د/ تامر الشيخ",sub:"محاسبة حكومية وقومية",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"د/ محمد المسيري",sub:"ادارة مواد",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"د/ علي محمد علي",sub:"تجارة خارجية",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"د/ عبده عتش",sub:"محاسبة تكاليف",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"أ.م.د / ايمن صبري",sub:"مشاكل محاسبية معاصرة",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"إنجليزي",des:true,rep:true},
-  {dr:"د/ محمد المسيري",sub:"تمويل وادارة مالية",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"إنجليزي",des:true,rep:true},
-  {dr:"أ.م.د/ عزت قناوي",sub:"تجارة خارجية",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"عربي",des:false,rep:false},
-  {dr:"أ.د/ سيد عبد الفتاح",sub:"محاسبة حكومية وقومية",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"د/ محمد المسيري",sub:"تمويل وادارة مالية",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"د/ عبده عتش",sub:"محاسبة تكاليف",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"عربي",des:false,rep:false},
-  {dr:"د/ احمد رمزي",sub:"احصاء تطبيقي",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"أ.د/ علي عبد القادر",sub:"ادارة مواد",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"أ.م.د/ دينا كمال",sub:"مشاكل محاسبية معاصرة",grade:"الفرقة الثالثة",sem:"الفصل الأول",lang:"عربي",des:true,rep:false},
-  {dr:"أ.م.د / ايمن صبري",sub:"تطبيقات محاسبية واحصائية",grade:"الفرقة الثالثة",sem:"الفصل الثاني",lang:"عربي",des:true,rep:true},
-  {dr:"أ.د/ محمد ابو القمصان",sub:"ادارة الاستثمار",grade:"الفرقة الثالثة",sem:"الفصل الثاني",lang:"عربي",des:true,rep:true},
-  {dr:"أ.د/ ايناس العباسي",sub:"ادارة اعمال دولية",grade:"الفرقة الثالثة",sem:"الفصل الثاني",lang:"عربي",des:true,rep:true},
-  {dr:"أ.م.د / ايمن صبري",sub:"تطبيقات محاسبية واحصائية",grade:"الفرقة الثالثة",sem:"الفصل الثاني",lang:"إنجليزي",des:true,rep:true},
-  {dr:"د / وجدان حجاج",sub:"ادارة اعمال دولية",grade:"الفرقة الثالثة",sem:"الفصل الثاني",lang:"إنجليزي",des:true,rep:true},
-  {dr:"أ.م.د / ايمن صبري",sub:"اصول مراجعة",grade:"الفرقة الثالثة",sem:"الفصل الثاني",lang:"إنجليزي",des:true,rep:true},
-  {dr:"أ.د/ ايهاب ابو خزانة",sub:"التحليل المحاسبي للقوائم",grade:"الفرقة الرابعة",sem:"الفصل الأول",lang:"عربي",des:false,rep:true},
-  {dr:"أ.م.د/ ابراهيم الطحان",sub:"نظم التكاليف الفعلية",grade:"الفرقة الرابعة",sem:"الفصل الأول",lang:"عربي",des:false,rep:false},
-  {dr:"أ.م.د / ايمن صبري",sub:"محاسبة مالية متقدمة",grade:"الفرقة الرابعة",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"أ.م.د/ ياسر الشافعي",sub:"محاسبة ضريبية",grade:"الفرقة الرابعة",sem:"الفصل الأول",lang:"عربي",des:false,rep:false},
-  {dr:"أ.م.د/ ايمان عبد الفتاح",sub:"مراجعة الحسابات",grade:"الفرقة الرابعة",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"د/ هبة طنطاوي",sub:"نظم المعلومات المحاسبية",grade:"الفرقة الرابعة",sem:"الفصل الأول",lang:"عربي",des:false,rep:false},
-  {dr:"أ.د/ ايناس العباسي",sub:"بحوث التسويق",grade:"الفرقة الرابعة",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"د/ منى السنديوني",sub:"ادارة الجودة",grade:"الفرقة الرابعة",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"أ.م.د/ سامح ابو الدهب",sub:"نظريات التنظيم",grade:"الفرقة الرابعة",sem:"الفصل الأول",lang:"عربي",des:false,rep:false},
-  {dr:"أ.م.د / ممدوح عبد الفتاح",sub:"الادراة الاستراتيجية",grade:"الفرقة الرابعة",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"د/ اسامة الطبلاوي",sub:"بحوث العمليات الادارية",grade:"الفرقة الرابعة",sem:"الفصل الأول",lang:"عربي",des:true,rep:true},
-  {dr:"أ.م.د / ايمن صبري",sub:"مراجعة الحسابات",grade:"الفرقة الرابعة",sem:"الفصل الأول",lang:"إنجليزي",des:true,rep:true},
-  {dr:"د/ عبده عتش",sub:"نظم التكاليف الفعلية",grade:"الفرقة الرابعة",sem:"الفصل الأول",lang:"إنجليزي",des:false,rep:false},
-  {dr:"أ.د/ ايهاب ابو خزانة",sub:"محاسبة منشأت متخصصة",grade:"الفرقة الرابعة",sem:"الفصل الثاني",lang:"عربي",des:true,rep:true},
-  {dr:"أ.د/ علي مجاهد",sub:"محاسبة ادارية متقدمة",grade:"الفرقة الرابعة",sem:"الفصل الثاني",lang:"عربي",des:true,rep:true},
-  {dr:"أ.م.د/ هبة الطنطاوي",sub:"بحوث العمليات في المحاسبة",grade:"الفرقة الرابعة",sem:"الفصل الثاني",lang:"عربي",des:true,rep:true},
-  {dr:"أ.م.د/ ابراهيم زكريا",sub:"محاسبة دولية",grade:"الفرقة الرابعة",sem:"الفصل الثاني",lang:"عربي",des:true,rep:true},
-  {dr:"د/ محمد المسيري",sub:"اسواق ومؤسسات مالية",grade:"الفرقة الرابعة",sem:"الفصل الثاني",lang:"عربي",des:true,rep:true},
-  {dr:"د/ وليد ابو حلوة",sub:"ادارة مشروعات صغيرة",grade:"الفرقة الرابعة",sem:"الفصل الثاني",lang:"عربي",des:true,rep:true},
-  {dr:"أ.د/ شيرين ابو وردة",sub:"اعلان وعلاقات عامة",grade:"الفرقة الرابعة",sem:"الفصل الثاني",lang:"عربي",des:true,rep:true},
-  {dr:"أ.م.د/ ممدوح عبد الفتاح",sub:"دراسة جدوى المشروعات",grade:"الفرقة الرابعة",sem:"الفصل الثاني",lang:"عربي",des:true,rep:true},
-  {dr:"د/ محمد المسيري",sub:"اسواق ومؤسسات مالية",grade:"الفرقة الرابعة",sem:"الفصل الثاني",lang:"إنجليزي",des:true,rep:true},
-  {dr:"د/ ابراهيم منشاوي",sub:"محاسبة دولية",grade:"الفرقة الرابعة",sem:"الفصل الثاني",lang:"إنجليزي",des:true,rep:true},
-  {dr:"د/ وجدان حجاج",sub:"دراسة جدوى المشروعات",grade:"الفرقة الرابعة",sem:"الفصل الثاني",lang:"إنجليزي",des:true,rep:true},
-];
+const DES_SHEET_ID = '1XxgMw5kLWMdO5seomWM1Kmwt4b4As0EmUfQN9PjT8w0';
+const REP_SHEET_ID = '1XaJeEHIohHgKX2wcgSec5FuFFnbF14Cl7DsLsM0Jgbs';
 
-function dbStatus(d) { return d.des&&d.rep?'done':d.des||d.rep?'partial':'pending'; }
-function dbStatusLabel(s) { return s==='done'?'مكتمل':s==='partial'?'جزئي':'لم يُقدم'; }
-function dbBadge(v,label) {
-  const cls = v?'background:#e8f5e9;color:#2e7d32':'background:#fce4ec;color:#b71c1c';
-  return `<span style="display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;${cls}">${label}</span>`;
-}
-function dbStatusBadge(s) {
-  const map={done:'background:#e8f5e9;color:#2e7d32',partial:'background:#fff3e0;color:#e65100',pending:'background:#fce4ec;color:#b71c1c'};
-  return `<span style="display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;${map[s]}">${dbStatusLabel(s)}</span>`;
-}
-
+let allData = [];
 let _gradeChart, _typeChart;
 
-function dbRender() {
-  const fg = document.getElementById('db-grade').value;
-  const fs = document.getElementById('db-sem').value;
-  const fl = document.getElementById('db-lang').value;
-  const fst = document.getElementById('db-status').value;
+async function fetchSheet(id) {
+  const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json`;
+  const res = await fetch(url);
+  const text = await res.text();
+  const json = JSON.parse(text.substring(47).slice(0, -2));
+  return json.table.rows;
+}
 
-  const filtered = dbData.filter(d=>
-    (!fg||d.grade===fg)&&(!fs||d.sem===fs)&&(!fl||d.lang===fl)&&(!fst||dbStatus(d)===fst)
-  );
+function colVal(row, idx) {
+  try { return row.c[idx] && row.c[idx].v ? String(row.c[idx].v).trim() : ''; }
+  catch(e) { return ''; }
+}
 
-  const total=dbData.length, done=dbData.filter(d=>dbStatus(d)==='done').length;
-  const partial=dbData.filter(d=>dbStatus(d)==='partial').length;
-  const pending=dbData.filter(d=>dbStatus(d)==='pending').length;
-  const pct=Math.round(done/total*100);
+async function dbLoad() {
+  document.getElementById('db-loading').style.display = 'block';
+  document.getElementById('db-content').style.display = 'none';
+  document.getElementById('db-error').style.display = 'none';
 
-  document.getElementById('db-metrics').innerHTML = `
+  try {
+    const [desRows, repRows] = await Promise.all([fetchSheet(DES_SHEET_ID), fetchSheet(REP_SHEET_ID)]);
+
+    const desMap = {};
+    desRows.slice(1).forEach(row => {
+      const name = colVal(row,1), course = colVal(row,5), grade = colVal(row,2), sem = colVal(row,3), lang = colVal(row,6);
+      if(name && course) {
+        const key = `${name}|${course}|${grade}|${sem}|${lang}`;
+        desMap[key] = true;
+      }
+    });
+
+    const repMap = {};
+    repRows.slice(1).forEach(row => {
+      const name = colVal(row,1), course = colVal(row,5), grade = colVal(row,2), sem = colVal(row,3), lang = colVal(row,6);
+      if(name && course) {
+        const key = `${name}|${course}|${grade}|${sem}|${lang}`;
+        repMap[key] = true;
+      }
+    });
+
+    const allKeys = new Set([...Object.keys(desMap), ...Object.keys(repMap)]);
+    allData = Array.from(allKeys).map(key => {
+      const [name, course, grade, sem, lang] = key.split('|');
+      return { dr: name, sub: course, grade, sem, lang, des: !!desMap[key], rep: !!repMap[key] };
+    });
+
+    if (allData.length === 0) {
+      document.getElementById('db-loading').style.display = 'none';
+      document.getElementById('db-content').style.display = 'block';
+      document.getElementById('db-tbody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#9e9e9e;font-size:13px;">لا توجد بيانات مرفوعة بعد</td></tr>';
+      document.getElementById('db-metrics').innerHTML = metricCards(0,0,0,0,0);
+      return;
+    }
+
+    document.getElementById('db-lastupdate').textContent = 'آخر تحديث: ' + new Date().toLocaleTimeString('ar-EG');
+    document.getElementById('db-loading').style.display = 'none';
+    document.getElementById('db-content').style.display = 'block';
+    dbFilter();
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('db-loading').style.display = 'none';
+    document.getElementById('db-error').style.display = 'block';
+  }
+}
+
+function metricCards(total, done, partial, pending, pct) {
+  return `
     <div style="background:#f8faff;border-radius:14px;border:1.5px solid #dde4f0;padding:1rem;">
-      <div style="font-size:12px;color:#607d9e;margin-bottom:6px;">إجمالي المقررات</div>
+      <div style="font-size:12px;color:#607d9e;margin-bottom:6px;">إجمالي المرفوعات</div>
       <div style="font-size:26px;font-weight:900;color:#0d1b4b;">${total}</div>
     </div>
     <div style="background:#f8faff;border-radius:14px;border:1.5px solid #dde4f0;padding:1rem;">
-      <div style="font-size:12px;color:#607d9e;margin-bottom:6px;">مكتمل التسليم</div>
+      <div style="font-size:12px;color:#607d9e;margin-bottom:6px;">رفع التوصيف والتقرير</div>
       <div style="font-size:26px;font-weight:900;color:#2e7d32;">${done}</div>
       <div style="height:5px;background:#e0e0e0;border-radius:3px;margin-top:8px;"><div style="height:100%;width:${pct}%;background:#639922;border-radius:3px;"></div></div>
     </div>
     <div style="background:#f8faff;border-radius:14px;border:1.5px solid #dde4f0;padding:1rem;">
-      <div style="font-size:12px;color:#607d9e;margin-bottom:6px;">جزئي / لم يُقدم</div>
-      <div style="font-size:26px;font-weight:900;"><span style="color:#e65100;">${partial}</span> / <span style="color:#b71c1c;">${pending}</span></div>
+      <div style="font-size:12px;color:#607d9e;margin-bottom:6px;">جزئي فقط</div>
+      <div style="font-size:26px;font-weight:900;color:#e65100;">${partial}</div>
     </div>
     <div style="background:#f8faff;border-radius:14px;border:1.5px solid #dde4f0;padding:1rem;">
       <div style="font-size:12px;color:#607d9e;margin-bottom:6px;">نسبة الإنجاز</div>
       <div style="font-size:26px;font-weight:900;color:#1565c0;">${pct}%</div>
       <div style="height:5px;background:#e0e0e0;border-radius:3px;margin-top:8px;"><div style="height:100%;width:${pct}%;background:#1565c0;border-radius:3px;"></div></div>
-    </div>
-  `;
+    </div>`;
+}
+
+function dbBadge(v) {
+  const cls = v ? 'background:#e8f5e9;color:#2e7d32' : 'background:#fce4ec;color:#b71c1c';
+  return `<span style="display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;${cls}">${v?'تم':'لا'}</span>`;
+}
+
+function dbFilter() {
+  const fg = document.getElementById('db-grade').value;
+  const fs = document.getElementById('db-sem').value;
+  const fl = document.getElementById('db-lang').value;
+
+  const filtered = allData.filter(d =>
+    (!fg || d.grade === fg) &&
+    (!fs || d.sem === fs) &&
+    (!fl || d.lang === fl)
+  );
+
+  const total = allData.length;
+  const done = allData.filter(d => d.des && d.rep).length;
+  const partial = allData.filter(d => (d.des || d.rep) && !(d.des && d.rep)).length;
+  const pending = allData.filter(d => !d.des && !d.rep).length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+
+  document.getElementById('db-metrics').innerHTML = metricCards(total, done, partial, pending, pct);
 
   const tbody = document.getElementById('db-tbody');
-  tbody.innerHTML = filtered.length ? filtered.map(d=>`
+  tbody.innerHTML = filtered.length ? filtered.map(d => `
     <tr style="border-bottom:1px solid #f0f4fb;">
       <td style="padding:9px 14px;color:#2c3e6b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.dr}">${d.dr}</td>
       <td style="padding:9px 14px;color:#2c3e6b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.sub}">${d.sub}</td>
-      <td style="padding:9px 14px;color:#607d9e;">${d.grade.replace('الفرقة ','')}</td>
-      <td style="padding:9px 14px;color:#607d9e;">${d.sem.replace('الفصل ','ف')}</td>
+      <td style="padding:9px 14px;color:#607d9e;font-size:12px;">${d.grade}</td>
+      <td style="padding:9px 14px;color:#607d9e;font-size:12px;">${d.sem}</td>
       <td style="padding:9px 14px;color:#607d9e;">${d.lang}</td>
-      <td style="padding:9px 14px;">${dbBadge(d.des,d.des?'تم':'لا')}</td>
-      <td style="padding:9px 14px;">${dbBadge(d.rep,d.rep?'تم':'لا')}</td>
-      <td style="padding:9px 14px;">${dbStatusBadge(dbStatus(d))}</td>
-    </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#9e9e9e;font-size:13px;">لا توجد نتائج</td></tr>';
+      <td style="padding:9px 14px;">${dbBadge(d.des)}</td>
+      <td style="padding:9px 14px;">${dbBadge(d.rep)}</td>
+    </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#9e9e9e;font-size:13px;">لا توجد نتائج</td></tr>';
 
-  const grades=['الأولى','الثانية','الثالثة','الرابعة'];
-  const gradePct=grades.map(g=>{const t=dbData.filter(d=>d.grade.includes(g));return t.length?Math.round(t.filter(d=>dbStatus(d)==='done').length/t.length*100):0;});
-  const desTotal=dbData.filter(d=>d.des).length, repTotal=dbData.filter(d=>d.rep).length;
+  const grades = ['الأولى','الثانية','الثالثة','الرابعة'];
+  const gradePct = grades.map(g => {
+    const t = allData.filter(d => d.grade.includes(g));
+    return t.length ? Math.round(t.filter(d => d.des && d.rep).length / t.length * 100) : 0;
+  });
+  const desTotal = allData.filter(d => d.des).length;
+  const repTotal = allData.filter(d => d.rep).length;
 
   if(_gradeChart) _gradeChart.destroy();
-  _gradeChart=new Chart(document.getElementById('gradeChart'),{type:'bar',data:{labels:grades,datasets:[{label:'%',data:gradePct,backgroundColor:'#1565c0',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{max:100,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
+  _gradeChart = new Chart(document.getElementById('gradeChart'), {
+    type:'bar',
+    data:{labels:grades, datasets:[{label:'%', data:gradePct, backgroundColor:'#1565c0', borderRadius:6}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{y:{max:100, ticks:{callback:v=>v+'%', font:{size:10}}, grid:{color:'rgba(0,0,0,0.04)'}}, x:{ticks:{font:{size:11}}, grid:{display:false}}}}
+  });
 
   if(_typeChart) _typeChart.destroy();
-  _typeChart=new Chart(document.getElementById('typeChart'),{type:'doughnut',data:{labels:['توصيف','تقرير','لم يُسلَّم'],datasets:[{data:[desTotal,repTotal,total-Math.max(desTotal,repTotal)],backgroundColor:['#1565c0','#0d1b4b','#e3e8f0'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}}}}});
+  _typeChart = new Chart(document.getElementById('typeChart'), {
+    type:'doughnut',
+    data:{labels:['توصيف','تقرير','لم يُسلَّم'], datasets:[{data:[desTotal, repTotal, Math.max(0, total - Math.max(desTotal,repTotal))], backgroundColor:['#1565c0','#0d1b4b','#e3e8f0'], borderWidth:0}]},
+    options:{responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{position:'bottom', labels:{font:{size:11}, boxWidth:10, padding:8}}}}
+  });
 }
 
-window.addEventListener('load', dbRender);
+window.addEventListener('load', dbLoad);
 </script>
 
 <footer>
